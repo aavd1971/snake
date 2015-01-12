@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>snake_my</title>
+</head>
+<body>
+	<canvas id="canvas" width="300" height="300"></canvas>
+<script>
+onload = init;
+function init () {
+	//var
+	var canvas,ctx,w,h,x,y,hx,hy,cw,si,d,count,tail = null,
+    fruit = null,score,cols,rows,arrSnake,speed,SPEEDVALUE,
+    SPEEDVALUENEW;
+	//canvas
+	canvas = document.getElementById('canvas');
+	w = canvas.width;
+	h = canvas.height;
+	cw = 10;
+	cols = w / cw;
+	rows = h / cw;
+	ctx = canvas.getContext('2d');
+	score = 0;
+	SPEEDVALUE = 500;
+	SPEEDVALUENEW = 250;
+	//create snake
+	function createSnake () {
+		d = 'right';
+		count = 5;
+		x = 0;
+		y = Math.floor(rows / 2);
+		arrSnake = [];
+		for (var i = count - 1; i >= 0; i--) {
+				arrSnake.push({x: i,y: y});
+		}
+//        debugger;
+	}
+	//create fruit
+	function createFruit () {
+		//TODO: field generation without snake
+		x = Math.round(Math.random() * (cols - 2) + 1);
+		y = Math.round(Math.random() * (rows - 2) + 1);
+		fruit = {x: x, y: y}
+	}
+	//create speed
+	function createSpeed () {
+		speed = {
+			x: Math.round(Math.random() * (cols - 2) + 1),
+			y: Math.round(Math.random() * (rows - 2) + 1)
+		}
+	}
+	//start game
+	function start () {
+		createSnake();
+		createFruit();
+		createSpeed();
+		if(si !== undefined) clearInterval(si);
+		si = setInterval(render,SPEEDVALUE);
+	}
+	start();
+	function render () {
+		// countSpeed = 1;
+		update();
+		paint();
+	}
+	function update () {
+		//logic
+		hx = arrSnake[0].x;
+		hy = arrSnake[0].y;
+		switch(d){
+			case 'left':
+				hx--;
+				break;
+			case 'right':
+				hx++;
+				break;
+			case 'up':
+				hy--;
+				break;				
+			case 'down':
+				hy++;
+				break;
+		}
+		//end game
+        if (hx * cw >= w || hx * cw <= 0 ||
+                hy * cw >= h || hy * cw <= 0
+                    || collision(hx,hy,arrSnake)) {
+            score = 0;
+            start();
+            return;
+        };
+
+		if (hx === fruit.x && hy === fruit.y) {
+			tail = {};
+			createFruit();
+			score++;
+		}else if(hx === speed.x && hy === speed.y){
+			clearInterval(si);
+			si = setInterval(render,SPEEDVALUENEW);
+			setTimeout(function(){
+				clearInterval(si);
+				si = setInterval(render,SPEEDVALUE)
+				},3000);
+			createSpeed();
+			tail = arrSnake.pop();
+		}else{
+			tail = arrSnake.pop();
+		}
+		addTail();
+    }
+    function addTail () {
+    	tail.x = hx;
+		tail.y = hy;
+		arrSnake.unshift(tail);
+    }
+	function paint () {
+		//canvas
+		ctx.strokeStyle = 'gray';
+		ctx.fillStyle = 'lightgreen';
+		ctx.fillRect(0,0,w,h);
+		ctx.strokeRect(0,0,w,h);
+		//snake
+		for (var i = 0; i < arrSnake.length; i++) {
+			ctx.fillStyle = 'black';
+			ctx.fillRect(arrSnake[i].x * cw,arrSnake[i].y * cw,cw,cw); 
+			ctx.strokeStyle = 'white';
+			ctx.strokeRect(arrSnake[i].x * cw,arrSnake[i].y * cw,cw,cw); 
+		}
+		//fruit
+		ctx.fillStyle = 'orange';
+		ctx.fillRect(fruit.x * cw,fruit.y * cw,cw,cw);
+		ctx.fillStyle = 'blue';
+		ctx.font = '18px Tahoma';
+		ctx.fillText('score:' + score,10,h - 10);
+		//speed
+		ctx.fillStyle = 'blue';
+		ctx.fillRect(speed.x * cw,speed.y * cw,cw,cw);
+	}
+	//count click tab space
+	var co = 0;
+	onkeydown = function  (e) {
+		if(e.keyCode === 37 && d !== 'right'){
+			d = 'left';
+		}else if(e.keyCode === 39 && d !== 'left'){
+			d = 'right';
+		}else if(e.keyCode === 38 && d !== 'down'){
+			d = 'up';
+		}else if(e.keyCode === 40 && d !== 'up'){
+			d = 'down';
+		}
+		//esc
+		if (e.keyCode === 27) {};
+		//space
+		if (e.keyCode === 32) {
+			if(++co % 2){
+				clearInterval(si);					
+			}else{
+				si = setInterval(render,SPEEDVALUE);
+			}	
+		};
+	}
+	function collision (x,y,arr) {
+		for (var i = 0; i < arr.length; i++) {
+			if(arr[i].x === x && arr[i].y === y){
+				return true;
+			}
+		}
+		return false;
+	}
+}
+</script>
+</body>
+</html>
